@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<launch>
+    <let name="simulation"             value="false"/>
+    <set_parameter name="use_sim_time" value="$(var simulation)"/>
+
+    <!-- *********************************************************************** -->
+    <!-- FLAGS                                                                   -->
+    <!-- Flags to select modules to use                                          -->
+    <!-- *********************************************************************** -->
+
+    <arg name="use_teleop" default="true"/>
+
+    <!-- *********************************************************************** -->
+    <!-- TELEOP -->
+    <!-- *********************************************************************** -->
+    <group if="$(var use_teleop)">
+        <let name="joy_config_file"    value="$(find-pkg-share bringup)/config/example_joy.yaml"/>
+        <let name="teleop_config_file" value="$(find-pkg-share bringup)/config/example_teleop.yaml"/>
+
+        <include file="$(find-pkg-share bringup)/launch/node_launcher.launch.py">
+            <arg name="config_file" value="$(var joy_config_file)"/>
+        </include>
+
+        <include file="$(find-pkg-share bringup)/launch/node_launcher.launch.py">
+            <arg name="config_file" value="$(var teleop_config_file)"/>
+        </include>
+    </group>
+</launch>
