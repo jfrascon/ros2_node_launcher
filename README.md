@@ -23,8 +23,10 @@ my_ns:
   sub_ns:
     my_node:
       ros__parameters:
-        param_1: value
-        param_2: value
+        param_1: true
+        param_2: 42
+        camera_config: package://my_robot_description/config/camera.yaml
+        static_file: file:///home/user/data/fixed_params.yaml
         ros_remappings:
           topics:
             - "/camera/image_raw:/namespace/image_raw"
