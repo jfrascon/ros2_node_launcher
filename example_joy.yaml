@@ -1,0 +1,32 @@
+joy:
+    ros__parameters:
+        # If the $(dev_name) is found in the system, then the driver uses a device called $(dev_name)
+        # If the $(dev_name) is not found in the system, then the driver uses the device $(dev)
+        # To get a list of the names of all connected joysticks, an invalid dev_name can be specified
+        # dev_name: _x_
+        # dev_eff: /dev/input/event0
+        dev: /dev/input/js0
+        autorepeat_rate: 30.0
+        coalesce_interval: 0.001
+        deadzone: 0.05
+        default_trig_val: False
+        sticky_buttons: False
+        ros_remappings:
+            topics:
+                # subscribers
+                - "joy/set_feedback:joy/set_feedback"
+                # publishers
+                - "joy:joy"
+            #services:
+            # services servers: none
+            # services clients: none
+            #actions:
+            # action servers: none
+            # action clients: none
+        ros_execution:
+            node_package: "joy_linux"
+            node_executable: "joy_linux_node"
+            output: screen
+            emulate_tty: False
+            respawn: False
+            respawn_delay: 0
