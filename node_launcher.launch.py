@@ -94,6 +94,58 @@ def configure(context: LaunchContext, *args, **kwargs) -> Optional[List[LaunchDe
     return actions
 
 
+def expand_filenames(yaml_parameters: Dict[str, Any]) -> None:
+    """
+    Recursively traverses a ROS parameter dictionary and expands any values that use
+    'package://' or 'file://' URI-style path patterns into absolute file system paths.
+
+    The function modifies the input dictionary in-place.
+
+    Recognized patterns:
+      - 'package://<package>/a/relative/path/file.txt'
+        is expanded to:
+        '/absolute/path/to/<package>/a/relative/path/file.txt'
+
+      - 'file:///absolute/path/to/a/file.txt'
+        is expanded to:
+        '/absolute/path/to/a/file.txt'
+
+    This allows ROS configuration files to avoid hardcoding absolute paths,
+    improving portability across systems.
+
+    Parameters
+    ----------
+    yaml_parameters : dict
+        Dictionary representing ROS 2 parameters, typically under 'ros__parameters'.
+    """
+    if yaml_parameters is None or not isinstance(yaml_parameters, dict):
+        return
+
+    pattern1 = r"package://([^/]+)/(.+)"
+    pattern2 = r"file://(/.+)"
+
+    for param_id, value in yaml_parameters.items():
+        if isinstance(value, dict):
+            expand_filenames(value)
+            continue
+
+        if not isinstance(value, str):
+            continue
+
+        match1 = re.search(pattern1, value)
+
+        if match1 is not None:
+            package = get_package_share_directory(match1.group(1))
+            relative_path = match1.group(2)
+            yaml_parameters[param_id] = os.path.join(package, relative_path)
+            continue
+
+        match2 = re.search(pattern2, value)
+
+        if match2 is not None:
+            yaml_parameters[param_id] = match2.group(1)
+
+
 def get_node_config_and_ns(yaml_config: dict, namespace: str = "") -> Tuple[dict, str]:
     """
     Recursively traverses a hierarchical YAML configuration structure to locate the node definition.
@@ -319,58 +371,6 @@ def get_remappings_for_actions(actions_yaml: List[str]) -> List[Tuple[str, str]]
             remapping_list.append((from_prefix + suffix, to_prefix + suffix))
 
     return remapping_list
-
-
-def expand_filenames(yaml_parameters: Dict[str, Any]) -> None:
-    """
-    Recursively traverses a ROS parameter dictionary and expands any values that use
-    'package://' or 'file://' URI-style path patterns into absolute file system paths.
-
-    The function modifies the input dictionary in-place.
-
-    Recognized patterns:
-      - 'package://<package>/a/relative/path/file.txt'
-        is expanded to:
-        '/absolute/path/to/<package>/a/relative/path/file.txt'
-
-      - 'file:///absolute/path/to/a/file.txt'
-        is expanded to:
-        '/absolute/path/to/a/file.txt'
-
-    This allows ROS configuration files to avoid hardcoding absolute paths,
-    improving portability across systems.
-
-    Parameters
-    ----------
-    yaml_parameters : dict
-        Dictionary representing ROS 2 parameters, typically under 'ros__parameters'.
-    """
-    if yaml_parameters is None or not isinstance(yaml_parameters, dict):
-        return
-
-    pattern1 = r"package://([^/]+)/(.+)"
-    pattern2 = r"file://(/.+)"
-
-    for param_id, value in yaml_parameters.items():
-        if isinstance(value, dict):
-            expand_filenames(value)
-            continue
-
-        if not isinstance(value, str):
-            continue
-
-        match1 = re.search(pattern1, value)
-
-        if match1 is not None:
-            package = get_package_share_directory(match1.group(1))
-            relative_path = match1.group(2)
-            yaml_parameters[param_id] = os.path.join(package, relative_path)
-            continue
-
-        match2 = re.search(pattern2, value)
-
-        if match2 is not None:
-            yaml_parameters[param_id] = match2.group(1)
 
 
 def load_json_config(json_file: Path) -> Any:
