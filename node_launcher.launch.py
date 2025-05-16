@@ -62,7 +62,7 @@ def configure(context: LaunchContext, *args, **kwargs) -> Optional[List[LaunchDe
     # Parameters are passed as a list, with each element either a yaml file that contains
     # parameter rules or a dictionary that specifies parameter rules.
 
-    get_filenames_from_filename_patterns(ros_parameters)
+    expand_filenames(ros_parameters)
 
     # print(ros_parameters)
 
@@ -321,7 +321,7 @@ def get_remappings_for_actions(actions_yaml: List[str]) -> List[Tuple[str, str]]
     return remapping_list
 
 
-def get_filenames_from_filename_patterns(yaml_parameters: Dict[str, Any]) -> None:
+def expand_filenames(yaml_parameters: Dict[str, Any]) -> None:
     """
     Recursively traverses a ROS parameter dictionary and expands any values that use
     'package://' or 'file://' URI-style path patterns into absolute file system paths.
@@ -353,7 +353,7 @@ def get_filenames_from_filename_patterns(yaml_parameters: Dict[str, Any]) -> Non
 
     for param_id, value in yaml_parameters.items():
         if isinstance(value, dict):
-            get_filenames_from_filename_patterns(value)
+            expand_filenames(value)
             continue
 
         if not isinstance(value, str):
